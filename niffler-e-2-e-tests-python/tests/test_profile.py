@@ -1,8 +1,6 @@
 from playwright.sync_api import Page, expect
 from pages.main_page import MainPage
 from pages.profile_page import ProfilePage
-from helpers.data_generator import TestDataGenerator
-
 
 
 def test_add_category(page: Page, main_page: MainPage, profile_page: ProfilePage, login, generator):
