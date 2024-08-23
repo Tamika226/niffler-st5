@@ -38,5 +38,5 @@ def test_show_password(page: Page, identification_page: IdentificationPage, logi
 
     login_page.show_password()
 
-    assert login_page.password_input.get_attribute('type') == 'text'
-    assert login_page.password_input.input_value() == generated_password
+    expect(login_page.password_input).to_have_attribute('type', 'text')
+    expect(login_page.password_input).to_have_value(generated_password)
