@@ -16,7 +16,6 @@ class RegisterPage:
     def enter_password(self, password: str):
         self.password_input.fill(password)
 
-
     def submit_password(self, password: str):
         self.password_submit.fill(password)
 

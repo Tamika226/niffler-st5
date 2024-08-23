@@ -9,6 +9,11 @@ from pages.main_page import MainPage
 from pages.identification_page import IdentificationPage
 from pages.register_page import RegisterPage
 from pages.profile_page import ProfilePage
+from helpers.data_generator import TestDataGenerator
+
+
+from clients.spends_client import SpendsHttpClient
+from clients.categories_client import CategoriesHttpClient
 
 BROWSER = os.getenv('BROWSER') if os.getenv('BROWSER') is not None else 'chrome'
 IS_HEADLESS = os.getenv('IS_HEADLESS') if os.getenv('IS_HEADLESS') is not None else False
@@ -27,6 +32,11 @@ def app_url():
 @pytest.fixture(scope="session")
 def auth_url():
     return os.getenv("AUTH_URL")
+
+
+@pytest.fixture(scope="session")
+def gateway_url():
+    return os.getenv("GATEWAY_URL")
 
 
 @pytest.fixture(scope="session")
@@ -83,5 +93,33 @@ def login(page: Page, identification_page: IdentificationPage, login_page: Login
     login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
     login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
     login_page.click_button()
-
     expect(main_page.profile).to_be_visible()
+
+    token = page.evaluate("()=>window.sessionStorage.getItem('id_token')")
+    return token
+
+
+@pytest.fixture(scope="session")
+def generator():
+    generator = TestDataGenerator()
+    return generator
+
+
+@pytest.fixture()
+def spends_client(gateway_url, login) -> SpendsHttpClient:
+    return SpendsHttpClient(gateway_url, login)
+
+
+@pytest.fixture()
+def categories_client(gateway_url, login) -> CategoriesHttpClient:
+    return CategoriesHttpClient(gateway_url, login)
+
+
+@pytest.fixture()
+def get_any_category(categories_client, generator):
+    categories = categories_client.get_categories()
+    if categories is None:
+        new_name = generator.generate_word()
+        categories_client.add_category(new_name)
+        return new_name
+    return categories[0]["category"]
