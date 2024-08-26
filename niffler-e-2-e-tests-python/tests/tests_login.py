@@ -6,8 +6,8 @@ from pages.identification_page import IdentificationPage
 import os
 
 
-def test_success_login(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, app_url):
-    page.goto(app_url)
+def test_success_login(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, envs):
+    page.goto(envs.app_url)
     identification_page.to_login()
 
     login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
@@ -17,8 +17,8 @@ def test_success_login(page: Page, identification_page: IdentificationPage, logi
     expect(main_page.profile).to_be_visible()
 
 
-def test_incorrect_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, app_url, generator):
-    page.goto(app_url)
+def test_incorrect_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, envs, generator):
+    page.goto(envs.app_url)
     identification_page.to_login()
 
     login_page.enter_username(generator.generate_name())
@@ -28,8 +28,8 @@ def test_incorrect_password(page: Page, identification_page: IdentificationPage,
     expect(login_page.error_message).to_contain_text("Неверные учетные данные пользователя")
 
 
-def test_show_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, app_url, generator):
-    page.goto(app_url)
+def test_show_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, envs, generator):
+    page.goto(envs.app_url)
     identification_page.to_login()
 
     generated_password = generator.generate_password()

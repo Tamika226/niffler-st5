@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import pytest
 from playwright.sync_api import Playwright, Page, expect, Browser
 
+from models.config import Envs
 from pages.login_page import LoginPage
 from pages.main_page import MainPage
 from pages.identification_page import IdentificationPage
@@ -19,24 +20,17 @@ BROWSER = os.getenv('BROWSER') if os.getenv('BROWSER') is not None else 'chrome'
 IS_HEADLESS = os.getenv('IS_HEADLESS') if os.getenv('IS_HEADLESS') is not None else False
 
 
-@pytest.fixture(scope="session", autouse=True)
-def envs():
+@pytest.fixture(scope="session")
+def envs() -> Envs:
     load_dotenv()
-
-
-@pytest.fixture(scope="session")
-def app_url():
-    return os.getenv("APP_URL")
-
-
-@pytest.fixture(scope="session")
-def auth_url():
-    return os.getenv("AUTH_URL")
-
-
-@pytest.fixture(scope="session")
-def gateway_url():
-    return os.getenv("GATEWAY_URL")
+    return Envs(
+        app_url=os.getenv("APP_URL"),
+        auth_url=os.getenv("AUTH_URL"),
+        gateway_url=os.getenv("GATEWAY_URL"),
+        default_timeout=os.getenv("DEFAULT_TIMEOUT"),
+        default_user_login=os.getenv("DEFAULT_USER_LOGIN"),
+        default_user_password=os.getenv("DEFAULT_USER_PASSWORD")
+    )
 
 
 @pytest.fixture(scope="session")
@@ -53,9 +47,9 @@ def browser(playwright: Playwright):
 
 
 @pytest.fixture
-def page(browser: Browser) -> Page:
+def page(browser: Browser, envs) -> Page:
     page = browser.new_page()
-    page.set_default_timeout(os.getenv("DEFAULT_TIMEOUT"))
+    page.set_default_timeout(envs.default_timeout)
     yield page
     page.close()
 
@@ -86,8 +80,8 @@ def profile_page(page: Page):
 
 
 @pytest.fixture
-def login(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, app_url):
-    page.goto(app_url)
+def login(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, envs):
+    page.goto(envs.app_url)
     identification_page.to_login()
 
     login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
@@ -106,13 +100,13 @@ def generator():
 
 
 @pytest.fixture()
-def spends_client(gateway_url, login) -> SpendsHttpClient:
-    return SpendsHttpClient(gateway_url, login)
+def spends_client(envs, login) -> SpendsHttpClient:
+    return SpendsHttpClient(envs.gateway_url, login)
 
 
 @pytest.fixture()
-def categories_client(gateway_url, login) -> CategoriesHttpClient:
-    return CategoriesHttpClient(gateway_url, login)
+def categories_client(envs, login) -> CategoriesHttpClient:
+    return CategoriesHttpClient(envs.gateway_url, login)
 
 
 @pytest.fixture()
