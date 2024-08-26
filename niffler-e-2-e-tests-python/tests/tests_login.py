@@ -17,7 +17,7 @@ def test_success_login(page: Page, identification_page: IdentificationPage, logi
     expect(main_page.profile).to_be_visible()
 
 
-def test_incorrect_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, app_url, generator):
+def test_incorrect_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, app_url, generator):
     page.goto(app_url)
     identification_page.to_login()
 
@@ -28,7 +28,7 @@ def test_incorrect_password(page: Page, identification_page: IdentificationPage,
     expect(login_page.error_message).to_contain_text("Неверные учетные данные пользователя")
 
 
-def test_show_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, app_url, generator):
+def test_show_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, app_url, generator):
     page.goto(app_url)
     identification_page.to_login()
 
