@@ -1,9 +1,10 @@
 from playwright.sync_api import expect
-from pages.main_page import MainPage
-from pages.profile_page import ProfilePage
+
+from marks import Actions
 
 
-def test_add_category(main_page: MainPage, profile_page: ProfilePage, login, generator):
+@Actions.login
+def test_add_category(main_page, profile_page, generator):
     main_page.to_profile()
     category_name = generator.generate_word()
 

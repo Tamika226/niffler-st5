@@ -1,12 +1,9 @@
-from playwright.sync_api import Page, expect
-from pages.login_page import LoginPage
-from pages.main_page import MainPage
-from pages.identification_page import IdentificationPage
+from playwright.sync_api import expect
 
 import os
 
 
-def test_success_login(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, envs):
+def test_success_login(page, identification_page, login_page, main_page, envs):
     page.goto(envs.app_url)
     identification_page.to_login()
 
@@ -17,7 +14,7 @@ def test_success_login(page: Page, identification_page: IdentificationPage, logi
     expect(main_page.profile).to_be_visible()
 
 
-def test_incorrect_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, app_url, generator):
+def test_incorrect_password(page, identification_page, login_page, envs, generator):
     page.goto(envs.app_url)
     identification_page.to_login()
 
@@ -28,13 +25,13 @@ def test_incorrect_password(page: Page, identification_page: IdentificationPage,
     expect(login_page.error_message).to_contain_text("Неверные учетные данные пользователя")
 
 
-def test_show_password(page: Page, identification_page: IdentificationPage, login_page: LoginPage, app_url, generator):
+def test_show_password(page, identification_page, login_page, envs, generator):
     page.goto(envs.app_url)
     identification_page.to_login()
 
     generated_password = generator.generate_password()
     login_page.enter_password(generated_password)
-    assert login_page.password_input.get_attribute('type') == 'password'
+    expect(login_page.password_input).to_have_attribute('type', 'password')
 
     login_page.show_password()
 
