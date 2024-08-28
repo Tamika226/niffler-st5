@@ -12,7 +12,7 @@ from pages.register_page import RegisterPage
 from pages.profile_page import ProfilePage
 from helpers.data_generator import TestDataGenerator
 
-
+from clients.auth_client import AuthClient
 from clients.spends_client import SpendsHttpClient
 from clients.categories_client import CategoriesHttpClient
 
@@ -117,3 +117,17 @@ def get_any_category(categories_client, generator):
         categories_client.add_category(new_name)
         return new_name
     return categories[0]["category"]
+
+
+@pytest.fixture(scope="session")
+def get_token(envs):
+    auth = AuthClient(envs.auth_url, envs.app_url)
+    token = auth.do_login(f"{envs.default_user_login}", f"{envs.default_user_password}")
+    return token
+
+
+@pytest.fixture()
+def delete_all_spends_after_tests(spends_client):
+    yield
+    spends = spends_client.get_spends()
+    spends_client.remove_spends([spends["id"]])

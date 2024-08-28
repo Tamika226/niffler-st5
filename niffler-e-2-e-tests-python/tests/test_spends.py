@@ -1,7 +1,6 @@
 from playwright.sync_api import expect
 from marks import Actions
 
-
 @Actions.login
 def test_add_spend(main_page, generator, get_any_category):
     category_name = get_any_category
@@ -16,7 +15,7 @@ def test_add_spend(main_page, generator, get_any_category):
 
 
 @Actions.login
-def test_category_non_exists(main_page, generator):
+def test_category_non_exists(main_page, generator, get_token):
 
     main_page.set_category(generator.generate_word())
 
@@ -33,7 +32,7 @@ def test_empty_category(main_page, generator):
 
 
 @Actions.login
-def test_negative_amount(main_page, generator, get_any_category):
+def test_negative_amount(main_page, generator, get_any_category, envs):
 
     category_name = get_any_category
     amount = str(-generator.generate_amount())
@@ -65,5 +64,7 @@ def test_empty_spend_date(main_page, generator, get_any_category):
     main_page.set_amount(str(generator.generate_amount()))
     main_page.set_spend_date("")
     main_page.add_new_spend()
+
+
 
     expect(main_page.error_message).to_contain_text("Spend date is required")
