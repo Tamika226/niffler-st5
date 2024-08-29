@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class PreRequest(BaseModel):
     response_type: str
+    scope: str
     client_id: str
     redirect_uri: str
     code_challenge: str
@@ -10,9 +11,9 @@ class PreRequest(BaseModel):
 
 
 class Login(BaseModel):
-    xsrf: str
     username: str
     password: str
+    _csrf: str
 
 
 class Token(BaseModel):
@@ -25,7 +26,9 @@ class Token(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    scope: str
+    id_token: str
     token_type: str
     expires_in: int
-    refresh_token: str | None
-    id_token: str
+    refresh_token: str | None = None
+

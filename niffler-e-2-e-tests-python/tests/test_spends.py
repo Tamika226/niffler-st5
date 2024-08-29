@@ -15,7 +15,7 @@ def test_add_spend(main_page, generator, get_any_category):
 
 
 @Actions.login
-def test_category_non_exists(main_page, generator, get_token):
+def test_category_non_exists(main_page, generator):
 
     main_page.set_category(generator.generate_word())
 
