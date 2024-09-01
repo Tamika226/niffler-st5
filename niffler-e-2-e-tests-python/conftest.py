@@ -126,8 +126,10 @@ def get_token(envs):
     return token
 
 
-@pytest.fixture()
-def delete_all_spends_after_tests(spends_client):
+@pytest.fixture(scope="session", autouse=True)
+def delete_all_spends_after_tests(envs, get_token):
     yield
+    spends_client = SpendsHttpClient(envs.gateway_url, get_token)
     spends = spends_client.get_spends()
-    spends_client.remove_spends([spends["id"]])
+    if spends:
+        spends_client.remove_spends([spend["id"] for spend in spends])

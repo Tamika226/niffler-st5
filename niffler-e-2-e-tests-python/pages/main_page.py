@@ -18,23 +18,25 @@ class MainPage(Header):
         self.category_select.click()
         self.category_select.locator(f'//div[contains(text(),"{category}")]').click()
 
-    def set_category(self, category: str):
+    def type_category(self, category: str):
         self.category_select.click()
-        self.category_select.fill(category)
-        self.empty_space.click()
+        self.category_select.type(category)
 
     def set_amount(self, amount: str):
         self.amount.fill(amount)
         self.empty_space.click()
 
-    def set_spend_date(self, date: str):
+    def type_spend_date(self, date: str):
         self.calendar.click()
         self.calendar.clear()
-        self.calendar.fill(date)
+        self.calendar.type(date)
         self.empty_space.click()
 
     def set_description(self, description: str):
         self.description.fill(description)
+
+    def type_description(self, description: str):
+        self.description.type(description)
 
     def add_new_spend(self):
         self.add_new_spend_button.click()
