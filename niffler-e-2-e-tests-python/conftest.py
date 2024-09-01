@@ -1,10 +1,13 @@
 import os
+import datetime
 
 from dotenv import load_dotenv
 import pytest
 from playwright.sync_api import Playwright, Page, expect, Browser
 
 from models.config import Envs
+from models.spend import NewSpend, Spend
+
 from pages.login_page import LoginPage
 from pages.main_page import MainPage
 from pages.identification_page import IdentificationPage
@@ -55,6 +58,11 @@ def page(browser: Browser, envs) -> Page:
 
 
 @pytest.fixture
+def reload_page(page: Page):
+    page.reload()
+
+
+@pytest.fixture
 def login_page(page: Page):
     return LoginPage(page)
 
@@ -99,14 +107,14 @@ def generator():
     return generator
 
 
-@pytest.fixture()
-def spends_client(envs, login) -> SpendsHttpClient:
-    return SpendsHttpClient(envs.gateway_url, login)
+@pytest.fixture(scope="session")
+def spends_client(envs, get_token) -> SpendsHttpClient:
+    return SpendsHttpClient(envs.gateway_url, get_token)
 
 
-@pytest.fixture()
-def categories_client(envs, login) -> CategoriesHttpClient:
-    return CategoriesHttpClient(envs.gateway_url, login)
+@pytest.fixture(scope="session")
+def categories_client(envs, get_token) -> CategoriesHttpClient:
+    return CategoriesHttpClient(envs.gateway_url, get_token)
 
 
 @pytest.fixture()
@@ -127,9 +135,39 @@ def get_token(envs):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def delete_all_spends_after_tests(envs, get_token):
+def delete_all_spends_after_tests(spends_client):
     yield
-    spends_client = SpendsHttpClient(envs.gateway_url, get_token)
     spends = spends_client.get_spends()
     if spends:
-        spends_client.remove_spends([spend["id"] for spend in spends])
+        spends_client.remove_spends([spend.id for spend in spends])
+        assert not spends_client.get_spends()
+
+
+@pytest.fixture()
+def delete_spend(spends_client, id: str):
+    spends_client.remove_spends([id])
+
+
+@pytest.fixture()
+def add_spend(spends_client, generator, get_any_category) -> Spend:
+    created_spends = []
+    def _add_spend(amount: float | None  = None,
+                   category: str | None  = None,
+                   currency: str | None = "RUB",
+                   description: str | None = "",
+                   spendDate: str | None = None) -> Spend:
+
+        spend_model = NewSpend(
+            amount=amount if amount is not None else generator.generate_amount(),
+            category=category if category is not None else get_any_category,
+            currency=currency,
+            description=description,
+            spendDate=spendDate if spendDate is not None else str((datetime.datetime.utcnow() - datetime.timedelta(days=1)).isoformat())
+        )
+
+        spend = spends_client.add_spends(spend_model)
+        created_spends.append(spend)
+        return spend
+
+    yield _add_spend
+    spends_client.remove_spends([created_spend.id for created_spend in created_spends])

@@ -12,8 +12,8 @@ def test_add_spend(main_page, generator, get_any_category):
     main_page.set_description(generator.generate_word())
     main_page.add_new_spend()
 
-    expect(main_page.spending_table).to_contain_text(f'{amount}')
-    expect(main_page.spending_table).to_contain_text(f'{category_name}')
+    expect(main_page.spending_section).to_contain_text(f'{amount}')
+    expect(main_page.spending_section).to_contain_text(f'{category_name}')
 
 
 @Actions.login
@@ -100,8 +100,8 @@ def test_add_wo_description(main_page, generator, get_any_category):
     main_page.set_amount(amount)
     main_page.add_new_spend()
 
-    expect(main_page.spending_table).to_contain_text(f'{amount}')
-    expect(main_page.spending_table).to_contain_text(f'{category_name}')
+    expect(main_page.spending_section).to_contain_text(f'{amount}')
+    expect(main_page.spending_section).to_contain_text(f'{category_name}')
 
 
 @Actions.login
@@ -113,5 +113,5 @@ def test_add_with_description_longer_then_256(main_page, generator, get_any_cate
     main_page.set_amount(str(generator.generate_amount()))
     main_page.set_description(description)
     main_page.add_new_spend()
-    expect(main_page.spending_table).to_contain_text(f'{description[:255]}')
+    expect(main_page.spending_section).to_contain_text(f'{description[:255]}')
 
