@@ -1,6 +1,6 @@
 from urllib.parse import urljoin
 from clients.base_client import BaseHttpClient
-from models.spend import NewSpend, Spend
+from models.Spend import NewSpend, Spend
 
 
 class SpendsHttpClient(BaseHttpClient):
@@ -18,7 +18,7 @@ class SpendsHttpClient(BaseHttpClient):
         response = self.session.delete(url, params={"ids": ids})
         response.raise_for_status()
 
-    def get_spends(self):
+    def get_spends(self) -> list[Spend]:
         url = urljoin(self.base_url, "/api/spends/all")
         response = self.session.get(url)
         response.raise_for_status()

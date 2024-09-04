@@ -1,14 +1,12 @@
 from playwright.sync_api import expect
 
-import os
-
 
 def test_success_login(page, identification_page, login_page, main_page, envs):
     page.goto(envs.app_url)
     identification_page.to_login()
 
-    login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
-    login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
+    login_page.enter_username(envs.default_user_login)
+    login_page.enter_password(envs.default_user_password)
     login_page.click_button()
 
     expect(main_page.profile).to_be_visible()
