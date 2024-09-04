@@ -16,7 +16,7 @@ def test_success_registration(page, identification_page, register_page, envs, ge
     register_page.click_button()
 
     expect(register_page.success_registration).to_be_visible()
-    assert check_user_in_db(username) is not None
+    assert check_user_in_db(username)
 
 
 def test_registration_existing_user(page, identification_page, register_page, envs, generator):
@@ -45,7 +45,7 @@ def test_registration_with_different_passwords(page, identification_page, regist
     register_page.click_button()
 
     expect(register_page.error_password).to_have_text('Passwords should be equal')
-    assert check_user_in_db(username) is None
+    assert not check_user_in_db(username)
 
 
 @pytest.mark.parametrize("name_length", [2, 51])
@@ -62,7 +62,7 @@ def test_registration_with_inappropriate_name_length(page, identification_page, 
     register_page.click_button()
 
     expect(register_page.error_username).to_have_text('Allowed username length should be from 3 to 50 characters')
-    assert check_user_in_db(username) is None
+    assert not check_user_in_db(username)
 
 
 @pytest.mark.parametrize("password_length", [2, 13])
@@ -80,7 +80,7 @@ def test_registration_with_inappropriate_password_length(page, identification_pa
     register_page.click_button()
 
     expect(register_page.error_password).to_have_text('Allowed password length should be from 3 to 12 characters')
-    assert check_user_in_db(username) is None
+    assert not check_user_in_db(username)
 
 
 

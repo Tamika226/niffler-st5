@@ -193,7 +193,7 @@ def auth_db(envs) -> AuthDb:
 def check_user_in_db(auth_db):
     def _check_user_in_db(username: str):
         user = auth_db.get_user(username)
-        return user
+        return True if user else False
     return _check_user_in_db
 
 
@@ -203,7 +203,3 @@ def delete_all_users_except_test_after_all(auth_db, envs):
     for user in users:
         if user.username != envs.default_user_login:
             auth_db.delete_user(user.username)
-
-
-
-
