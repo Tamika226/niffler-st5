@@ -1,0 +1,7 @@
+pytest
+requests
+python-dotenv
+
+psycopg2-binary
+sqlalchemy>=2.0.34
+sqlmodel

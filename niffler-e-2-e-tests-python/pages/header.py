@@ -1,4 +1,5 @@
 from playwright.sync_api import Page
+from enum import Enum
 
 
 class Header:
@@ -21,3 +22,9 @@ class Header:
     def to_main(self):
         self.main.click()
 
+
+class CurrencyTypes(Enum):
+    RUB = 1
+    KZT = 2
+    EUR = 3
+    USD = 4

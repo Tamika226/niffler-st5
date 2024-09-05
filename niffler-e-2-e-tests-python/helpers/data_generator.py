@@ -1,5 +1,9 @@
+import string
+
 from faker import Faker
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+import random
 
 
 class TestDataGenerator:
@@ -21,7 +25,11 @@ class TestDataGenerator:
     def generate_date(self):
         return f"{self.fake.date_time(): %d/%m/%Y}"
 
-    def generate_future_date(self):
-        future_date = datetime.now() + timedelta(days=1)
+    @staticmethod
+    def generate_future_date():
+        future_date = datetime.now() + relativedelta(years=1)
         return f"{future_date: %d/%m/%Y}"
 
+    @staticmethod
+    def generate_string(size: int):
+        return ''.join(random.choices(string.ascii_letters, k=size))
