@@ -141,17 +141,16 @@ def get_token(envs):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def delete_all_spends_after_tests(spends_client):
+def delete_all_spends_and_categories_after_tests(spends_client, spend_db, categories_client):
     yield
     spends = spends_client.get_spends()
     if spends:
         spends_client.remove_spends([spend["id"] for spend in spends])
         assert not spends_client.get_spends()
+    categories = categories_client.get_categories()
+    for category in categories:
+        spend_db.delete_category(category["id"])
 
-
-@pytest.fixture()
-def delete_spend(spends_client, id: str):
-    spends_client.remove_spends([id])
 
 
 @pytest.fixture()
