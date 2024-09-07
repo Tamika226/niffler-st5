@@ -30,24 +30,16 @@ BROWSER = os.getenv('BROWSER') if os.getenv('BROWSER') is not None else 'chrome'
 IS_HEADLESS = os.getenv('IS_HEADLESS') if os.getenv('IS_HEADLESS') is not None else False
 
 
-def allure_logger(config) -> AllureReporter:
-    listener: AllureListener = config.pluginmanager.get.plugin("allure_listener")
-    return listener.allure_logger
-
-
 @pytest.hookimpl(hookwrapper=True, trylast=True)
-def pytest_runtest_call(item: Item):
+def pytest_fixture_setup(fixturedef: FixtureDef, request: FixtureRequest):
     yield
-    allure.dynamic.title(" ".join(item.name.split("_")[1:]).title())
+    reporter = allure._allure._reporter
+    last_item = reporter._items[-1] if reporter._items else None
 
-
-@pytest.hookimpl(hookwrapper=True, trylast=True)
-def pytest_runtest_call(fixturedef: FixtureDef, request: FixtureRequest):
-    yield
-    logger = allure_logger(request.config)
-    item = logger.get_last_item()
-    scope_letter = fixturedef.scope[0].upper()
-    item.name = f"[{scope_letter}]" + " ".join(fixturedef.argname.split("_")).title()
+    if last_item:
+        scope_letter = fixturedef.scope[0].upper()
+        new_name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
+        last_item.name = new_name
 
 
 @pytest.fixture(scope="session")
@@ -69,7 +61,7 @@ def envs() -> Envs:
     return envs
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def browser(playwright: Playwright):
     match BROWSER:
         case 'firefox':
@@ -154,7 +146,7 @@ def categories_client(envs, get_token) -> CategoriesHttpClient:
 @pytest.fixture()
 def get_any_category(categories_client, generator):
     categories = categories_client.get_categories()
-    if categories is None:
+    if not categories is None:
         new_name = generator.generate_word()
         categories_client.add_category(new_name)
         return new_name

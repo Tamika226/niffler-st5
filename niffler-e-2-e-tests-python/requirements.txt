@@ -1,6 +1,8 @@
 pytest
 requests
 python-dotenv
+allure-pytest
+requests-toolbelt
 
 psycopg2-binary
 sqlalchemy>=2.0.34
