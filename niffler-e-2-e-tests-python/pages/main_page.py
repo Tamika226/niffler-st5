@@ -12,9 +12,10 @@ class SpendsHistoryDatesFilter(Enum):
 
 
 class MainPage(Header):
-    def __init__(self, page: 'Page'):
+    def __init__(self, page: Page):
         super().__init__(page)
         self.category_select = page.locator('//form[@class="add-spending__form"]//div[@class="select-wrapper"]')
+        self.category_selector_without_coincidence = self.category_select.locator(f'//div[contains(text(),"No options)]')
         self.amount = page.locator('//input[@name="amount"]')
         self.calendar = page.locator('//div[@class="react-datepicker-wrapper"]//input')
         self.description = page.locator('//input[@name="description"]')
@@ -32,6 +33,7 @@ class MainPage(Header):
     def select_category(self, category: str):
         self.category_select.click()
         self.category_select.locator(f'//div[contains(text(),"{category}")]').click()
+        return self
 
     def type_category(self, category: str):
         self.category_select.click()
@@ -40,24 +42,29 @@ class MainPage(Header):
     def set_amount(self, amount: str):
         self.amount.fill(amount)
         self.empty_space.click()
+        return self
 
     def type_spend_date(self, date: str):
         self.calendar.click()
         self.calendar.clear()
         self.calendar.type(date)
         self.empty_space.click()
+        return self
 
     def set_description(self, description: str):
         self.description.fill(description)
+        return self
 
     def type_description(self, description: str):
         self.description.type(description)
+        return self
 
     def add_new_spend(self):
         self.add_new_spend_button.click()
 
     def select_spend(self, spend_id:str):
         self.spending_section.locator(f'//td/input[@value="{spend_id}"]').click()
+        return self
 
     def select_all_spend(self):
         self.all_spends_checkbox.click()
@@ -74,3 +81,4 @@ class MainPage(Header):
 
     def select_spends_by_period(self, period: SpendsHistoryDatesFilter):
         self.spending_section.locator(f'//button[contains(text(),"{StringHelper.camel_to_sentence(period.name)}")]').click()
+        return self

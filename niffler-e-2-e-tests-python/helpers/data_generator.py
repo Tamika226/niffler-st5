@@ -7,26 +7,29 @@ import random
 
 
 class TestDataGenerator:
+
+    one_period = 1
+
     def __init__(self):
         self.fake = Faker()
 
-    def generate_name(self):
+    def name(self):
         return self.fake.name()
 
-    def generate_password(self, length=10):
+    def password(self, length=10):
         return self.fake.password(length=length, special_chars=True, digits=True, upper_case=True, lower_case=True)
 
-    def generate_word(self):
+    def word(self):
         return self.fake.word()
 
-    def generate_amount(self):
-        return self.fake.random_int(min=1, max=100)
+    def amount(self):
+        return str(self.fake.random_int(min=1, max=100))
 
-    def generate_date(self):
+    def date(self):
         return f"{self.fake.date_time(): %d/%m/%Y}"
 
     @staticmethod
-    def generate_future_date():
+    def future_date():
         future_date = datetime.now() + relativedelta(years=1)
         return f"{future_date: %d/%m/%Y}"
 
