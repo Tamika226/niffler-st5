@@ -33,6 +33,8 @@ spring:
     show-sql: false
     generate-ddl: true
     open-in-view: false
+  profiles:
+    default: local
 
 logging:
   level:

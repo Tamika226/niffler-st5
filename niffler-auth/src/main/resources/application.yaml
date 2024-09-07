@@ -6,7 +6,6 @@ server:
       cookie:
         http-only: false
         secure: false
-
 spring:
   application:
     name: niffler-auth
@@ -38,6 +37,8 @@ spring:
     show-sql: false
     generate-ddl: true
     open-in-view: false
+  profiles:
+    default: local
 
 logging:
   level:
