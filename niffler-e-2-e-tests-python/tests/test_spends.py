@@ -1,65 +1,47 @@
-from playwright.sync_api import Page, expect
-from pages.main_page import MainPage
-from pages.profile_page import ProfilePage
+from playwright.sync_api import expect
 
 
-def test_add_spend(main_page: MainPage, login, generator, get_any_category):
+def test_add_spend(app, login, generator, get_any_category):
     category_name = get_any_category
-    amount = str(generator.generate_amount())
+    amount = generator.amount()
 
-    main_page.select_category(category_name)
-    main_page.set_amount(amount)
-    main_page.set_spend_date(generator.generate_date())
-    main_page.set_description(generator.generate_word())
-    main_page.add_new_spend()
+    app.main_page.select_category(category_name).set_amount(amount).set_spend_date(generator.date()).set_description(
+        generator.word()).add_new_spend()
 
-    expect(main_page.spending_table.locator(f'text="{amount}'))
+    expect(app.main_page.spending_table.locator(f'text="{amount}'))
 
 
-def test_category_non_exists(main_page: MainPage, login, generator):
+def test_category_non_exists(app, login, generator):
+    app.main_page.set_category(generator.word())
 
-    main_page.set_category(generator.generate_word())
-
-    expect(main_page.category_select.locator(f'//div[contains(text(),"no options)]'))
-
-
-def test_empty_category(main_page: MainPage, login, generator):
-
-    main_page.set_amount(str(generator.generate_amount()))
-    main_page.add_new_spend()
-
-    expect(main_page.error_message).to_contain_text("Category is required")
+    expect(app.main_page.category_selector_without_coincidence).to_be_visible()
 
 
-def test_negative_amount(main_page: MainPage, login, generator, get_any_category):
+def test_empty_category(app, login, generator):
+    app.main_page.set_amount(str(generator.amount())).add_new_spend()
 
-    category_name = get_any_category
-    amount = str(-generator.generate_amount())
-
-    main_page.select_category(category_name)
-    main_page.set_amount(amount)
-    main_page.add_new_spend()
-
-    expect(main_page.error_message).to_contain_text("Amount should be greater than 0")
+    expect(app.main_page.error_message).to_contain_text("Category is required")
 
 
-def test_empty_amount(main_page: MainPage, login, generator, get_any_category):
-
+def test_negative_amount(app, login, generator, get_any_category):
     category_name = get_any_category
 
-    main_page.select_category(category_name)
-    main_page.add_new_spend()
+    app.main_page.select_category(category_name).set_amount("-" + generator.amount()).add_new_spend()
 
-    expect(main_page.error_message).to_contain_text("Amount is required")
+    expect(app.main_page.error_message).to_contain_text("Amount should be greater than 0")
 
 
-def test_empty_spend_date(main_page: MainPage, login, generator, get_any_category):
-
+def test_empty_amount(app, login, generator, get_any_category):
     category_name = get_any_category
 
-    main_page.select_category(category_name)
-    main_page.set_amount(str(generator.generate_amount()))
-    main_page.set_spend_date("")
-    main_page.add_new_spend()
+    app.main_page.select_category(category_name).add_new_spend()
 
-    expect(main_page.error_message).to_contain_text("Spend date is required")
+    expect(app.main_page.error_message).to_contain_text("Amount is required")
+
+
+def test_empty_spend_date(app, login, generator, get_any_category):
+    category_name = get_any_category
+
+    app.main_page.select_category(category_name).set_amount(generator.amount()).set_spend_date("").add_new_spend()
+
+    expect(app.main_page.error_message).to_contain_text("Spend date is required")

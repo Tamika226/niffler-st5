@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import pytest
 from playwright.sync_api import Playwright, Page, expect, Browser
 
+from helpers.app import App
 from pages.login_page import LoginPage
 from pages.main_page import MainPage
 from pages.identification_page import IdentificationPage
@@ -39,7 +40,7 @@ def gateway_url():
     return os.getenv("GATEWAY_URL")
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def browser(playwright: Playwright):
     match BROWSER:
         case 'firefox':
@@ -54,10 +55,9 @@ def browser(playwright: Playwright):
 
 @pytest.fixture
 def page(browser: Browser) -> Page:
-    page = browser.new_page()
-    page.set_default_timeout(os.getenv("DEFAULT_TIMEOUT"))
-    yield page
-    page.close()
+    new_page = browser.new_page()
+    yield new_page
+    new_page.close()
 
 
 @pytest.fixture
@@ -85,14 +85,19 @@ def profile_page(page: Page):
     return ProfilePage(page)
 
 
+@pytest.fixture()
+def app(page, login_page, identification_page, main_page, register_page,profile_page):
+    return App(page, login_page, identification_page, main_page, register_page, profile_page)
+
+
 @pytest.fixture
 def login(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, app_url):
     page.goto(app_url)
-    identification_page.to_login()
+    identification_page.open_login()
 
     login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
     login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
-    login_page.click_button()
+    login_page.click_submit()
     expect(main_page.profile).to_be_visible()
 
     token = page.evaluate("()=>window.sessionStorage.getItem('id_token')")
@@ -118,8 +123,8 @@ def categories_client(gateway_url, login) -> CategoriesHttpClient:
 @pytest.fixture()
 def get_any_category(categories_client, generator):
     categories = categories_client.get_categories()
-    if categories is None:
-        new_name = generator.generate_word()
+    if not categories:
+        new_name = generator.word()
         categories_client.add_category(new_name)
         return new_name
     return categories[0]["category"]
