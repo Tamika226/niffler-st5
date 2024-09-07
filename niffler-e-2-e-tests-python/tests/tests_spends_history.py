@@ -1,3 +1,4 @@
+import pytest
 from playwright.sync_api import expect
 from marks import Actions
 from datetime import datetime, timedelta
@@ -25,6 +26,7 @@ def test_delete_selected_spend(main_page, add_spend, reload_page):
     spend = add_spend()
 
     reload_page
+
     expect(main_page.spending_section).to_contain_text(f'{spend.amount:g}')
     expect(main_page.spending_section).to_contain_text(f'{spend.category}')
 
@@ -40,6 +42,7 @@ def test_delete_all_spends(main_page, add_spend, reload_page):
     second_spend = add_spend()
 
     reload_page
+
     expect(main_page.spending_section).to_contain_text(f'{first_spend.amount:g}')
     expect(main_page.spending_section).to_contain_text(f'{first_spend.category}')
     expect(main_page.spending_section).to_contain_text(f'{second_spend.amount:g}')
@@ -52,48 +55,24 @@ def test_delete_all_spends(main_page, add_spend, reload_page):
 
 
 @Actions.login
-def test_filter_today_spend(main_page, add_spend, reload_page):
-    spend_date = str((datetime.utcnow() - timedelta(days=2)).isoformat())
-    spend = add_spend(spendDate=spend_date)
+@pytest.mark.parametrize("period", [SpendsHistoryDatesFilter.Today, SpendsHistoryDatesFilter.LastWeek,
+                                    SpendsHistoryDatesFilter.LastMonth])
+def test_filter_by_period(main_page, add_spend, generator, reload_page, period):
+    spend = add_spend(spendDate = generator.date(period).to_api_format())
+
     reload_page
     expect(main_page.spending_section).to_contain_text(f'{spend.amount:g}')
     expect(main_page.spending_section).to_contain_text(f'{spend.category}')
 
-    main_page.select_spends_by_period(SpendsHistoryDatesFilter.Today)
+    main_page.select_spends_by_period(period)
 
     expect(main_page.spending_section).to_contain_text('No spendings provided yet!')
 
 
 @Actions.login
-def test_filter_last_week_spend(main_page, add_spend, reload_page):
-    spend_date = str((datetime.utcnow() - timedelta(days=8)).isoformat())
-    spend = add_spend(spendDate=spend_date)
-    reload_page
-    expect(main_page.spending_section).to_contain_text(f'{spend.amount:g}')
-    expect(main_page.spending_section).to_contain_text(f'{spend.category}')
+def test_filter_all_times_spend(main_page, add_spend, reload_page, generator):
+    spend = add_spend(spendDate=generator.date(SpendsHistoryDatesFilter.Today).to_api_format())
 
-    main_page.select_spends_by_period(SpendsHistoryDatesFilter.LastWeek)
-
-    expect(main_page.spending_section).to_contain_text('No spendings provided yet!')
-
-
-@Actions.login
-def test_filter_last_month_spend(main_page, add_spend, reload_page):
-    spend_date = str((datetime.utcnow() - timedelta(days=41)).isoformat())
-    spend = add_spend(spendDate=spend_date)
-    reload_page
-    expect(main_page.spending_section).to_contain_text(f'{spend.amount:g}')
-    expect(main_page.spending_section).to_contain_text(f'{spend.category}')
-
-    main_page.select_spends_by_period(SpendsHistoryDatesFilter.LastMonth)
-
-    expect(main_page.spending_section).to_contain_text('No spendings provided yet!')
-
-
-@Actions.login
-def test_filter_all_times_spend(main_page, add_spend, reload_page):
-    spend_date = str((datetime.utcnow() - timedelta(days=2)).isoformat())
-    spend = add_spend(spendDate=spend_date)
     reload_page
     expect(main_page.spending_section).to_contain_text(f'{spend.amount:g}')
     expect(main_page.spending_section).to_contain_text(f'{spend.category}')

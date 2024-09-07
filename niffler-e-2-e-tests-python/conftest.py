@@ -10,6 +10,7 @@ from databases.spend_db import SpendDb
 from models.Config import Envs
 from models.Spend import NewSpend, Spend
 
+from helpers.app import App
 from pages.login_page import LoginPage
 from pages.main_page import MainPage
 from pages.identification_page import IdentificationPage
@@ -36,13 +37,12 @@ def envs() -> Envs:
         userdata_db_url=os.getenv("USERDATA_DB_URL"),
         currency_db_url=os.getenv("CURRENCY_DB_URL"),
         auth_db_url=os.getenv("AUTH_DB_URL"),
-        default_timeout=os.getenv("DEFAULT_TIMEOUT"),
         default_user_login=os.getenv("DEFAULT_USER_LOGIN"),
         default_user_password=os.getenv("DEFAULT_USER_PASSWORD")
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture()
 def browser(playwright: Playwright):
     match BROWSER:
         case 'firefox':
@@ -56,11 +56,10 @@ def browser(playwright: Playwright):
 
 
 @pytest.fixture
-def page(browser: Browser, envs) -> Page:
-    page = browser.new_page()
-    page.set_default_timeout(envs.default_timeout)
-    yield page
-    page.close()
+def page(browser: Browser) -> Page:
+    new_page = browser.new_page()
+    yield new_page
+    new_page.close()
 
 
 @pytest.fixture
@@ -93,17 +92,22 @@ def profile_page(page: Page):
     return ProfilePage(page)
 
 
+@pytest.fixture()
+def app(page, login_page, identification_page, main_page, register_page,profile_page):
+    return App(page, login_page, identification_page, main_page, register_page, profile_page)
+
+
 @pytest.fixture
-def login(page: Page, identification_page: IdentificationPage, login_page: LoginPage, main_page: MainPage, envs):
-    page.goto(envs.app_url)
-    identification_page.to_login()
+def login(app, envs):
+    app.page.goto(envs.app_url)
+    app.identification_page.open_login()
 
-    login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
-    login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
-    login_page.click_button()
-    expect(main_page.profile).to_be_visible()
+    app.login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
+    app.login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
+    app.login_page.click_submit()
+    expect(app.main_page.profile).to_be_visible()
 
-    token = page.evaluate("()=>window.sessionStorage.getItem('id_token')")
+    token = app.page.evaluate("()=>window.sessionStorage.getItem('id_token')")
     return token
 
 
@@ -126,8 +130,8 @@ def categories_client(envs, get_token) -> CategoriesHttpClient:
 @pytest.fixture()
 def get_any_category(categories_client, generator):
     categories = categories_client.get_categories()
-    if categories is None:
-        new_name = generator.generate_word()
+    if not categories:
+        new_name = generator.word()
         categories_client.add_category(new_name)
         return new_name
     return categories[0]["category"]
@@ -163,7 +167,7 @@ def add_spend(spends_client, generator, get_any_category) -> Spend:
                    spendDate: str | None = None) -> Spend:
 
         spend_model = NewSpend(
-            amount=amount if amount is not None else generator.generate_amount(),
+            amount=amount if amount is not None else generator.amount(),
             category=category if category is not None else get_any_category,
             currency=currency,
             description=description,
