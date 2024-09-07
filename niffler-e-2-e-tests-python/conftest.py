@@ -98,7 +98,7 @@ def login(app, envs):
 
     app.login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
     app.login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
-    login_page.click_submit()
+    app.login_page.click_submit()
     expect(app.main_page.profile).to_be_visible()
 
     token = app.page.evaluate("()=>window.sessionStorage.getItem('id_token')")
@@ -143,7 +143,7 @@ def delete_all_spends_after_tests(spends_client):
     yield
     spends = spends_client.get_spends()
     if spends:
-        spends_client.remove_spends([spend.id for spend in spends])
+        spends_client.remove_spends([spend["id"] for spend in spends])
         assert not spends_client.get_spends()
 
 
@@ -162,7 +162,7 @@ def add_spend(spends_client, generator, get_any_category) -> Spend:
                    spendDate: str | None = None) -> Spend:
 
         spend_model = NewSpend(
-            amount=amount if amount is not None else generator.generate_amount(),
+            amount=amount if amount is not None else generator.amount(),
             category=category if category is not None else get_any_category,
             currency=currency,
             description=description,

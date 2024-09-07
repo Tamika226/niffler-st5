@@ -39,6 +39,9 @@ class MainPage(Header):
         self.category_select.click()
         self.category_select.type(category)
 
+    def get_category_in_list_by_name(self, category_name: str):
+        return self.category_select.locator(f'//div[contains(text(),"{category_name}")]')
+
     def set_amount(self, amount: str):
         self.amount.fill(amount)
         self.empty_space.click()

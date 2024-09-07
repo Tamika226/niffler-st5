@@ -5,6 +5,8 @@ def test_success_login(app, envs):
     app.page.goto(envs.app_url)
     app.identification_page.open_login()
 
+    app.login_page.enter_username(envs.default_user_login).enter_password(envs.default_user_password).click_submit()
+
     expect(app.main_page.profile).to_be_visible()
 
 
@@ -15,6 +17,7 @@ def test_incorrect_password(app, envs, generator):
     app.login_page.enter_username(generator.name()).enter_password(generator.password()).click_submit()
 
     expect(app.login_page.error_message).to_contain_text("Неверные учетные данные пользователя")
+
 
 def test_show_password(app, envs, generator):
     app.page.goto(envs.app_url)
