@@ -3,7 +3,7 @@ from playwright.sync_api import Page
 
 
 class ProfilePage(Header):
-    def __init__(self, page: 'Page'):
+    def __init__(self, page: Page):
         super().__init__(page)
         self.category_input = page.locator('//input[@name="category"]')
         self.create_button = page.locator('//button[contains(text(),"Create")]')
@@ -11,6 +11,7 @@ class ProfilePage(Header):
 
     def enter_category_name(self, category: str):
         self.category_input.fill(category)
+        return self
 
     def create_category(self):
         self.create_button.click()

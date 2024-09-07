@@ -4,11 +4,10 @@ from marks import Actions
 
 
 @Actions.login
-def test_add_category(main_page, profile_page, generator):
-    main_page.to_profile()
-    category_name = generator.generate_word()
+def test_add_category(app, login, generator):
+    app.main_page.open_profile()
+    category_name = generator.word()
 
-    profile_page.enter_category_name(category_name)
-    profile_page.create_category()
+    app.profile_page.enter_category_name(category_name).create_category()
 
-    expect(profile_page.created_categories).to_have_text(category_name)
+    expect(app.profile_page.created_categories).to_have_text(category_name)

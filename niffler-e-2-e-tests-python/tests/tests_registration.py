@@ -32,7 +32,8 @@ def test_registration_existing_user(page, identification_page, register_page, en
     expect(register_page.error_message).to_have_text(f'Username `{envs.default_user_login}` already exists')
 
 
-def test_registration_with_different_passwords(page, identification_page, register_page, envs, generator, check_user_in_db):
+def test_registration_with_different_passwords(page, identification_page, register_page, envs, generator,
+                                               check_user_in_db):
     page.goto(envs.app_url)
     identification_page.to_registration()
 
@@ -49,7 +50,8 @@ def test_registration_with_different_passwords(page, identification_page, regist
 
 
 @pytest.mark.parametrize("name_length", [2, 51])
-def test_registration_with_inappropriate_name_length(page, identification_page, register_page, envs, generator, check_user_in_db, name_length):
+def test_registration_with_inappropriate_name_length(page, identification_page, register_page, envs, generator,
+                                                     check_user_in_db, name_length):
     page.goto(envs.app_url)
     identification_page.to_registration()
 
@@ -66,7 +68,8 @@ def test_registration_with_inappropriate_name_length(page, identification_page, 
 
 
 @pytest.mark.parametrize("password_length", [2, 13])
-def test_registration_with_inappropriate_password_length(page, identification_page, register_page, envs, generator, check_user_in_db, password_length):
+def test_registration_with_inappropriate_password_length(page, identification_page, register_page, envs, generator,
+                                                         check_user_in_db, password_length):
     page.goto(envs.app_url)
     identification_page.to_registration()
 
@@ -81,6 +84,3 @@ def test_registration_with_inappropriate_password_length(page, identification_pa
 
     expect(register_page.error_password).to_have_text('Allowed password length should be from 3 to 12 characters')
     assert not check_user_in_db(username)
-
-
-

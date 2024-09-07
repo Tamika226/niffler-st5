@@ -9,6 +9,5 @@ class Envs(BaseModel):
     userdata_db_url: str
     currency_db_url: str
     auth_db_url: str
-    default_timeout: int
     default_user_login: str
     default_user_password: str
