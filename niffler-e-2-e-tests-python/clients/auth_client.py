@@ -1,5 +1,5 @@
 import requests
-from models.auth import PreRequest, Login, Token, TokenResponse
+from models.Auth import PreRequest, Login, Token, TokenResponse
 from helpers.oauth_codes import OauthHelper
 from urllib.parse import urljoin
 

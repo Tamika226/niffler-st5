@@ -5,8 +5,10 @@ from dotenv import load_dotenv
 import pytest
 from playwright.sync_api import Playwright, Page, expect, Browser
 
-from models.config import Envs
-from models.spend import NewSpend, Spend
+from databases.auth_db import AuthDb
+from databases.spend_db import SpendDb
+from models.Config import Envs
+from models.Spend import NewSpend, Spend
 
 from helpers.app import App
 from pages.login_page import LoginPage
@@ -31,6 +33,10 @@ def envs() -> Envs:
         app_url=os.getenv("APP_URL"),
         auth_url=os.getenv("AUTH_URL"),
         gateway_url=os.getenv("GATEWAY_URL"),
+        spend_db_url=os.getenv("SPEND_DB_URL"),
+        userdata_db_url=os.getenv("USERDATA_DB_URL"),
+        currency_db_url=os.getenv("CURRENCY_DB_URL"),
+        auth_db_url=os.getenv("AUTH_DB_URL"),
         default_user_login=os.getenv("DEFAULT_USER_LOGIN"),
         default_user_password=os.getenv("DEFAULT_USER_PASSWORD")
     )
@@ -139,17 +145,16 @@ def get_token(envs):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def delete_all_spends_after_tests(spends_client):
+def delete_all_spends_and_categories_after_tests(spends_client, spend_db, categories_client):
     yield
     spends = spends_client.get_spends()
     if spends:
         spends_client.remove_spends([spend["id"] for spend in spends])
         assert not spends_client.get_spends()
+    categories = categories_client.get_categories()
+    for category in categories:
+        spend_db.delete_category(category["id"])
 
-
-@pytest.fixture()
-def delete_spend(spends_client, id: str):
-    spends_client.remove_spends([id])
 
 
 @pytest.fixture()
@@ -175,3 +180,29 @@ def add_spend(spends_client, generator, get_any_category) -> Spend:
 
     yield _add_spend
     spends_client.remove_spends([created_spend.id for created_spend in created_spends])
+
+
+@pytest.fixture(scope="session")
+def spend_db(envs) -> SpendDb:
+    return SpendDb(envs.spend_db_url)
+
+
+@pytest.fixture(scope="session")
+def auth_db(envs) -> AuthDb:
+    return AuthDb(envs.auth_db_url)
+
+
+@pytest.fixture()
+def check_user_in_db(auth_db):
+    def _check_user_in_db(username: str):
+        user = auth_db.get_user(username)
+        return True if user else False
+    return _check_user_in_db
+
+
+@pytest.fixture(scope="session", autouse=True)
+def delete_all_users_except_test_after_all(auth_db, envs):
+    users = auth_db.get_all_users()
+    for user in users:
+        if user.username != envs.default_user_login:
+            auth_db.delete_user(user.username)

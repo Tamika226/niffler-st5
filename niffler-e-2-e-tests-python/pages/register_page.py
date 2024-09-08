@@ -8,6 +8,9 @@ class RegisterPage:
         self.password_submit = page.locator('//input[@name="passwordSubmit"]')
         self.button = page.locator('//button[@type="submit"]')
         self.error_message = page.locator('//span[@class="form__error"]')
+        self.error_username = self.user_name_input.locator('//following-sibling::span[@class="form__error"]')
+        self.error_password = self.password_input.locator('//following-sibling::span[@class="form__error"]')
+        self.success_registration = page.locator(f'//p[contains(text(), "Congratulations! You\'ve registered!")]')
 
     def enter_username(self, username: str):
         self.user_name_input.fill(username)
