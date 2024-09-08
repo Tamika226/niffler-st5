@@ -15,7 +15,7 @@ class MainPage(Header):
     def __init__(self, page: Page):
         super().__init__(page)
         self.category_select = page.locator('//form[@class="add-spending__form"]//div[@class="select-wrapper"]')
-        self.category_selector_without_coincidence = self.category_select.locator(f'//div[contains(text(),"No options)]')
+        self.category_selector_without_coincidence = self.category_select.locator('//div[contains(text(),"No options")]')
         self.amount = page.locator('//input[@name="amount"]')
         self.calendar = page.locator('//div[@class="react-datepicker-wrapper"]//input')
         self.description = page.locator('//input[@name="description"]')

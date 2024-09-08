@@ -32,18 +32,13 @@ IS_HEADLESS = os.getenv('IS_HEADLESS') if os.getenv('IS_HEADLESS') is not None e
 
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
-def pytest_fixture_setup(fixturedef: FixtureDef, request: FixtureRequest):
+def pytest_runtest_call(item: Item):
     yield
-    reporter = allure._allure._reporter
-    last_item = reporter._items[-1] if reporter._items else None
-
-    if last_item:
-        scope_letter = fixturedef.scope[0].upper()
-        new_name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
-        last_item.name = new_name
+    allure.dynamic.title(" ".join(item.name.split("_")[1:]).title())
 
 
 @pytest.fixture(scope="session")
+@allure.title("Environment variables")
 def envs() -> Envs:
     load_dotenv()
     envs = Envs(
@@ -57,7 +52,7 @@ def envs() -> Envs:
         default_user_login=os.getenv("DEFAULT_USER_LOGIN"),
         default_user_password=os.getenv("DEFAULT_USER_PASSWORD")
     )
-    allure.attach(envs, name='envs.json', attachment_type=AttachmentType.JSON)
+    allure.attach(envs.model_dump_json(), name='envs.json', attachment_type=AttachmentType.JSON)
     return envs
 
 

@@ -1,5 +1,8 @@
 import requests
-from models.Auth import PreRequest, Login, Token, TokenResponse
+import allure
+from allure_commons.types import AttachmentType
+
+from models.Auth import PreRequest, Token, TokenResponse
 from helpers.oauth_codes import OauthHelper
 from urllib.parse import urljoin
 
@@ -20,6 +23,7 @@ class AuthClient:
         response2 = requests.get(redirect_url1, cookies=response.cookies)
         xsrf = response2.cookies.get("XSRF-TOKEN")
         response2.raise_for_status()
+        allure.attach(request_data.model_dump_json(), name='request_data.json', attachment_type=AttachmentType.JSON)
         return xsrf, jsessionid
 
     def login(self, jsessionid, request_data):
