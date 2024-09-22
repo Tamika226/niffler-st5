@@ -5,18 +5,19 @@ from allure_commons.types import AttachmentType
 from models.Auth import PreRequest, Token, TokenResponse
 from helpers.oauth_codes import OauthHelper
 from urllib.parse import urljoin
+from helpers.session import AuthSession
 
 
 class AuthClient:
 
     def __init__(self, auth_url: str, client_id: str):
-        self.auth_url = auth_url
+        self.session = AuthSession(base_url=auth_url)
         self.client_id = client_id
-        self.redirect_url = urljoin(self.auth_url, "/authorized")
+        self.redirect_url = urljoin(self.session.base_url, "/authorized")
         self.code = None
 
     def pre_request(self, request_data: PreRequest):
-        response = requests.get(f"{self.auth_url}/oauth2/authorize", params=request_data.dict(), allow_redirects=False)
+        response = requests.get(f"{self.session.base_url}/oauth2/authorize", params=request_data.dict(), allow_redirects=False)
         jsessionid = response.cookies.get('JSESSIONID')
         redirect_url1 = response.headers['Location']
 
@@ -28,7 +29,7 @@ class AuthClient:
 
     def login(self, jsessionid, request_data):
         # Здесь отправляем без редиректов, так как из-за того, то куки к запросу жестко заданы, он протаскивает их дальше по редиректу, а должен менять
-        response = requests.post(f"{self.auth_url}/login", data=request_data,
+        response = requests.post(f"{self.session.base_url}/login", data=request_data,
                                  cookies={"JSESSIONID": jsessionid, "XSRF-TOKEN": request_data['_csrf']},
                                  headers={'Content-Type': 'application/x-www-form-urlencoded'}, allow_redirects=False)
         redirect_url_1 = response.headers.get("Location")
@@ -44,7 +45,7 @@ class AuthClient:
         return code
 
     def token(self, request_data: Token):
-        response = requests.post(f"{self.auth_url}/oauth2/token", data=request_data.dict())
+        response = requests.post(f"{self.session.base_url}/oauth2/token", data=request_data.dict())
         response.raise_for_status()
         return TokenResponse(**response.json()).access_token
 
