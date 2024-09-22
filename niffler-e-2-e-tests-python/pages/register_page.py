@@ -1,3 +1,4 @@
+import allure
 from playwright.sync_api import Page
 
 
@@ -13,16 +14,20 @@ class RegisterPage:
         self.success_registration = page.locator(f'//p[contains(text(), "Congratulations! You\'ve registered!")]')
 
     def enter_username(self, username: str):
-        self.user_name_input.fill(username)
-        return self
+        with (allure.step(f"Вводим имя пользователя = {username}")):
+            self.user_name_input.fill(username)
+            return self
 
     def enter_password(self, password: str):
-        self.password_input.fill(password)
-        return self
+        with (allure.step(f"Вводим пароль = {password}")):
+            self.password_input.fill(password)
+            return self
 
     def submit_password(self, password: str):
-        self.password_submit.fill(password)
-        return self
+        with (allure.step(f"Подтверждаем пароль = {password}")):
+            self.password_submit.fill(password)
+            return self
 
+    @allure.step("Нажимаем на кнопку submit")
     def click_submit(self):
         self.button.click()

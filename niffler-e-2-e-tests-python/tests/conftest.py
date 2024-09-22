@@ -1,12 +1,18 @@
 import os
 import datetime
 
-from dotenv import load_dotenv
+import allure
 import pytest
-from playwright.sync_api import Playwright, Page, expect, Browser
+from allure_commons.reporter import AllureReporter
+from allure_commons.types import AttachmentType
+from allure_pytest.listener import AllureListener
+from dotenv import load_dotenv
+from pytest import Item, FixtureDef, FixtureRequest
+from playwright.sync_api import Playwright, Page, Browser
 
 from databases.auth_db import AuthDb
 from databases.spend_db import SpendDb
+from helpers.allure_helpers import LoggedExpect
 from models.Config import Envs
 from models.Spend import NewSpend, Spend
 
@@ -26,10 +32,30 @@ BROWSER = os.getenv('BROWSER') if os.getenv('BROWSER') is not None else 'chrome'
 IS_HEADLESS = os.getenv('IS_HEADLESS') if os.getenv('IS_HEADLESS') is not None else False
 
 
+@pytest.hookimpl(hookwrapper=True, trylast=True)
+def pytest_runtest_call(item: Item):
+    yield
+    allure.dynamic.title(" ".join(item.name.split("_")[1:]).title())
+
+def allure_logger(config) -> AllureReporter:
+    listener: AllureListener = config.pluginmanager.get_plugin("allure_listener")
+    return listener.allure_logger
+
+
+@pytest.hookimpl(hookwrapper=True, trylast=True)
+def pytest_fixture_setup(fixturedef: FixtureDef, request: FixtureRequest):
+    yield
+    logger = allure_logger(request.config)
+    item = logger.get_last_item()
+    scope_letter = fixturedef.scope[0].upper()
+    item.name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
+
+
 @pytest.fixture(scope="session")
+@allure.title("Environment variables")
 def envs() -> Envs:
     load_dotenv()
-    return Envs(
+    envs = Envs(
         app_url=os.getenv("APP_URL"),
         auth_url=os.getenv("AUTH_URL"),
         gateway_url=os.getenv("GATEWAY_URL"),
@@ -40,6 +66,8 @@ def envs() -> Envs:
         default_user_login=os.getenv("DEFAULT_USER_LOGIN"),
         default_user_password=os.getenv("DEFAULT_USER_PASSWORD")
     )
+    allure.attach(envs.model_dump_json(), name='envs.json', attachment_type=AttachmentType.JSON)
+    return envs
 
 
 @pytest.fixture()
@@ -105,9 +133,10 @@ def login(app, envs):
     app.login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
     app.login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
     app.login_page.click_submit()
-    expect(app.main_page.profile).to_be_visible()
+    LoggedExpect(app.main_page.profile).to_be_visible()
 
     token = app.page.evaluate("()=>window.sessionStorage.getItem('id_token')")
+    allure.attach(token, name='token.txt', attachment_type=AttachmentType.TEXT)
     return token
 
 
