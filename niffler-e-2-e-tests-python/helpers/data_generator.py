@@ -27,7 +27,7 @@ class TestDataGenerator:
         return str(self.fake.random_int(min=1, max=100))
 
     @staticmethod
-    def generate_string(size: int):
+    def string(size: int):
         return ''.join(random.choices(string.ascii_letters, k=size))
 
     def date(self, period):

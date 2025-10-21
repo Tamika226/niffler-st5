@@ -1,3 +1,5 @@
+import allure
+
 from pages.header import Header
 from playwright.sync_api import Page
 
@@ -10,11 +12,14 @@ class ProfilePage(Header):
         self.created_categories = page.locator('//ul[@class="categories__list"]/child::*[last()]')
 
     def enter_category_name(self, category: str):
-        self.category_input.fill(category)
-        return self
+        with (allure.step(f"Вводим название категории = {category}")):
+            self.category_input.fill(category)
+            return self
 
+    @allure.step("Нажимаем на Кнопку Создать")
     def create_category(self):
         self.create_button.click()
 
+    @allure.step("Получаем название категории")
     def get_created_category(self):
         self.created_categories.text_content()
