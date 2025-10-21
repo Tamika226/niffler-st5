@@ -1,12 +1,20 @@
 import os
 import datetime
 
-from dotenv import load_dotenv
+import allure
 import pytest
-from playwright.sync_api import Playwright, Page, expect, Browser
+from allure_commons.reporter import AllureReporter
+from allure_commons.types import AttachmentType
+from allure_pytest.listener import AllureListener
+from dotenv import load_dotenv
+from pytest import Item, FixtureDef, FixtureRequest
+from playwright.sync_api import Playwright, Page, Browser
 
-from models.config import Envs
-from models.spend import NewSpend, Spend
+from databases.auth_db import AuthDb
+from databases.spend_db import SpendDb
+from helpers.allure_helpers import LoggedExpect
+from models.Config import Envs
+from models.Spend import NewSpend, Spend
 
 from helpers.app import App
 from pages.login_page import LoginPage
@@ -24,16 +32,42 @@ BROWSER = os.getenv('BROWSER') if os.getenv('BROWSER') is not None else 'chrome'
 IS_HEADLESS = os.getenv('IS_HEADLESS') if os.getenv('IS_HEADLESS') is not None else False
 
 
+@pytest.hookimpl(hookwrapper=True, trylast=True)
+def pytest_runtest_call(item: Item):
+    yield
+    allure.dynamic.title(" ".join(item.name.split("_")[1:]).title())
+
+def allure_logger(config) -> AllureReporter:
+    listener: AllureListener = config.pluginmanager.get_plugin("allure_listener")
+    return listener.allure_logger
+
+
+@pytest.hookimpl(hookwrapper=True, trylast=True)
+def pytest_fixture_setup(fixturedef: FixtureDef, request: FixtureRequest):
+    yield
+    logger = allure_logger(request.config)
+    item = logger.get_last_item()
+    scope_letter = fixturedef.scope[0].upper()
+    item.name = f"[{scope_letter}] " + " ".join(fixturedef.argname.split("_")).title()
+
+
 @pytest.fixture(scope="session")
+@allure.title("Environment variables")
 def envs() -> Envs:
     load_dotenv()
-    return Envs(
+    envs = Envs(
         app_url=os.getenv("APP_URL"),
         auth_url=os.getenv("AUTH_URL"),
         gateway_url=os.getenv("GATEWAY_URL"),
+        spend_db_url=os.getenv("SPEND_DB_URL"),
+        userdata_db_url=os.getenv("USERDATA_DB_URL"),
+        currency_db_url=os.getenv("CURRENCY_DB_URL"),
+        auth_db_url=os.getenv("AUTH_DB_URL"),
         default_user_login=os.getenv("DEFAULT_USER_LOGIN"),
         default_user_password=os.getenv("DEFAULT_USER_PASSWORD")
     )
+    allure.attach(envs.model_dump_json(), name='envs.json', attachment_type=AttachmentType.JSON)
+    return envs
 
 
 @pytest.fixture()
@@ -99,9 +133,10 @@ def login(app, envs):
     app.login_page.enter_username(os.getenv("DEFAULT_USER_LOGIN"))
     app.login_page.enter_password(os.getenv("DEFAULT_USER_PASSWORD"))
     app.login_page.click_submit()
-    expect(app.main_page.profile).to_be_visible()
+    LoggedExpect(app.main_page.profile).to_be_visible()
 
     token = app.page.evaluate("()=>window.sessionStorage.getItem('id_token')")
+    allure.attach(token, name='token.txt', attachment_type=AttachmentType.TEXT)
     return token
 
 
@@ -139,17 +174,16 @@ def get_token(envs):
 
 
 @pytest.fixture(scope="session", autouse=True)
-def delete_all_spends_after_tests(spends_client):
+def delete_all_spends_and_categories_after_tests(spends_client, spend_db, categories_client):
     yield
     spends = spends_client.get_spends()
     if spends:
         spends_client.remove_spends([spend["id"] for spend in spends])
         assert not spends_client.get_spends()
+    categories = categories_client.get_categories()
+    for category in categories:
+        spend_db.delete_category(category["id"])
 
-
-@pytest.fixture()
-def delete_spend(spends_client, id: str):
-    spends_client.remove_spends([id])
 
 
 @pytest.fixture()
@@ -175,3 +209,29 @@ def add_spend(spends_client, generator, get_any_category) -> Spend:
 
     yield _add_spend
     spends_client.remove_spends([created_spend.id for created_spend in created_spends])
+
+
+@pytest.fixture(scope="session")
+def spend_db(envs) -> SpendDb:
+    return SpendDb(envs.spend_db_url)
+
+
+@pytest.fixture(scope="session")
+def auth_db(envs) -> AuthDb:
+    return AuthDb(envs.auth_db_url)
+
+
+@pytest.fixture()
+def check_user_in_db(auth_db):
+    def _check_user_in_db(username: str):
+        user = auth_db.get_user(username)
+        return True if user else False
+    return _check_user_in_db
+
+
+@pytest.fixture(scope="session", autouse=True)
+def delete_all_users_except_test_after_all(auth_db, envs):
+    users = auth_db.get_all_users()
+    for user in users:
+        if user.username != envs.default_user_login:
+            auth_db.delete_user(user.username)

@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from sqlmodel import SQLModel, Field
 
 
 class PreRequest(BaseModel):
@@ -32,3 +33,18 @@ class TokenResponse(BaseModel):
     expires_in: int
     refresh_token: str | None = None
 
+
+class User(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    username: str
+    password: str
+    enabled: bool
+    account_non_expired: bool
+    account_non_locked: bool
+    credentials_non_expired: bool
+
+
+class Authority(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    user_id: str
+    authority: str

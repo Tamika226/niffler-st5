@@ -1,3 +1,4 @@
+import allure
 from playwright.sync_api import Page
 
 
@@ -10,15 +11,19 @@ class LoginPage:
         self.error_message = page.locator('//p[@class="form__error"]')
 
     def enter_username(self, username: str):
-        self.username_input.fill(username)
-        return self
+        with (allure.step(f"Вводим имя пользователя = {username}")):
+            self.username_input.fill(username)
+            return self
 
     def enter_password(self, password: str):
-        self.password_input.fill(password)
-        return self
+        with (allure.step(f"Вводим пароль = {password}")):
+            self.password_input.fill(password)
+            return self
 
+    @allure.step("Нажимаем на кнопку Submit")
     def click_submit(self):
         self.button.click()
 
+    @allure.step("Нажимаем на кнопку Показать пароль")
     def show_password(self):
         self.show_password_button.click()
